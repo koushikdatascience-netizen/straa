@@ -1,33 +1,362 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>HarbourCare Chatbot</title>
-  <style>
-    body { font-family: Arial; max-width: 500px; margin: auto; }
-    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
-    .msg { margin: 5px 0; }
-    .user { color: blue; }
-    .bot { color: green; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HarbourCare — Chat</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#06b6d4;
+    --user:#0ea5a4; --bot:#111827; --glass: rgba(255,255,255,0.03);
+    --radius:14px; --shadow: 0 6px 24px rgba(2,6,23,0.6);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; background:
+    radial-gradient(800px 300px at 10% 10%, rgba(6,182,212,0.06), transparent),
+    radial-gradient(600px 250px at 90% 90%, rgba(99,102,241,0.04), transparent),
+    var(--bg); color:#e6eef6; display:flex; align-items:center; justify-content:center;
+    padding:28px;
+  }
+
+  .container{
+    width:100%; max-width:920px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:20px; box-shadow:var(--shadow); overflow:hidden; display:grid;
+    grid-template-columns: 320px 1fr;
+    min-height:640px;
+  }
+
+  /* Sidebar */
+  .sidebar{
+    background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+    padding:20px; border-right:1px solid rgba(255,255,255,0.03);
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .brand{display:flex; gap:10px; align-items:center}
+  .logo{
+    width:46px; height:46px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#6366f1);
+    display:flex; align-items:center; justify-content:center; font-weight:700; color:#041024;
+    box-shadow:0 6px 18px rgba(6,182,212,0.08);
+  }
+  .brand h1{margin:0;font-size:17px;line-height:1;color:#eaf7fb}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+
+  .meta{font-size:13px;color:var(--muted); margin-top:6px}
+  .quick{margin-top:12px}
+  .quick button{
+    width:100%; text-align:left; background:transparent;border:1px solid rgba(255,255,255,0.03);
+    padding:10px;border-radius:10px;color:#dbeafe; cursor:pointer; margin-bottom:8px;
+  }
+  .quick button:hover{background:rgba(255,255,255,0.02)}
+
+  .controls{margin-top:auto; display:flex; gap:8px; align-items:center}
+  .controls button{
+    flex:1; padding:10px;border-radius:10px;border:0; cursor:pointer;background:var(--glass); color:var(--muted);
+  }
+  .controls button.primary{background:linear-gradient(90deg,var(--accent),#6366f1); color:#041024; font-weight:600}
+
+  /* Chat area */
+  .chat-area{display:flex; flex-direction:column; height:100%}
+  .header{padding:20px;border-bottom:1px solid rgba(255,255,255,0.02); display:flex; align-items:center; gap:16px}
+  .header h2{margin:0;font-size:18px}
+  .header p{margin:0;color:var(--muted);font-size:13px}
+
+  .messages{
+    flex:1; padding:22px; overflow:auto; background:
+    linear-gradient(180deg, rgba(255,255,255,0.002), transparent);
+    display:flex; flex-direction:column; gap:12px;
+  }
+
+  .msg{max-width:78%; padding:12px 14px; border-radius:12px; position:relative; font-size:14px; line-height:1.35}
+  .msg .meta{display:block;font-size:11px;color:var(--muted); margin-top:8px}
+  .user-msg{margin-left:auto; background:linear-gradient(180deg,var(--user),#0b8180); color:#021c1c; border-bottom-right-radius:4px}
+  .bot-msg{margin-right:auto; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color:#e6eef6; border-bottom-left-radius:4px}
+
+  .msg-actions{display:flex; gap:8px; margin-top:8px}
+  .msg-actions button{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:13px}
+
+  .typing{
+    display:inline-block; height:10px; vertical-align:middle;
+  }
+  .dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted); margin-right:4px; animation:blink 1s infinite}
+  .dots span:nth-child(2){animation-delay:.15s}
+  .dots span:nth-child(3){animation-delay:.3s}
+  @keyframes blink{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}
+
+  .input-area{padding:14px;border-top:1px solid rgba(255,255,255,0.02); display:flex; gap:10px; align-items:flex-end}
+  .input-area textarea{
+    flex:1; resize:none; min-height:46px; max-height:160px; border-radius:12px;padding:12px;background:transparent;
+    border:1px solid rgba(255,255,255,0.04); color: #eaf7fb; font-size:14px; outline:none;
+  }
+  .send-btn{
+    width:120px;padding:12px;border-radius:12px;border:0; background:linear-gradient(90deg,var(--accent),#6366f1); color:#041024; cursor:pointer;
+  }
+  .send-btn:disabled{opacity:.5; cursor:not-allowed}
+
+  .small{font-size:12px;color:var(--muted)}
+
+  /* responsive */
+  @media (max-width:880px){
+    .container{grid-template-columns:1fr; max-width:680px; min-height:640px}
+    .sidebar{display:none}
+  }
+</style>
 </head>
 <body>
-  <h2>HarbourCare Allied Health Chatbot</h2>
-  <div id="chat"></div>
-  <input id="msg" placeholder="Ask about HarbourCare..." />
-  <button onclick="send()">Send</button>
-  <script>
-    async function send() {
-      let msg = document.getElementById("msg").value;
-      document.getElementById("chat").innerHTML += `<div class="msg user">You: ${msg}</div>`;
-      let res = await fetch("https://n8n.agentx360.in/webhook-test/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ question: msg })
-      });
-      let data = await res.json();
-      document.getElementById("chat").innerHTML += `<div class="msg bot">Bot: ${data.answer}</div>`;
-      document.getElementById("msg").value = "";
+<div class="container" role="application" aria-label="HarbourCare chat widget">
+  <aside class="sidebar" aria-hidden="false">
+    <div class="brand">
+      <div class="logo">HC</div>
+      <div>
+        <h1>HarbourCare</h1>
+        <p>Allied Health — Canberra & Gold Coast</p>
+      </div>
+    </div>
+    <div class="meta">
+      <div><strong>Hours:</strong> Mon–Fri 08:30–17:30 · Sat 09:00–13:00</div>
+      <div style="margin-top:6px"><strong>Contact:</strong> hello@harbourcare.example.com</div>
+    </div>
+
+    <div class="quick" aria-label="Suggested questions">
+      <button data-suggest="What services do you provide?">What services do you provide?</button>
+      <button data-suggest="Do you accept NDIS plans?">Do you accept NDIS plans?</button>
+      <button data-suggest="Do you offer home visits?">Do you offer home visits?</button>
+      <button data-suggest="What are your opening hours?">What are your opening hours?</button>
+    </div>
+
+    <div class="controls">
+      <button id="clearBtn" title="Clear conversation">Clear chat</button>
+      <button class="primary" id="copyAll">Export</button>
+    </div>
+  </aside>
+
+  <main class="chat-area">
+    <div class="header">
+      <div>
+        <h2>HarbourCare Assistant</h2>
+        <p class="small">Grounded to HarbourCare Allied Health dataset only</p>
+      </div>
+    </div>
+
+    <div class="messages" id="messages" aria-live="polite" tabindex="0"></div>
+
+    <div class="input-area">
+      <textarea id="input" placeholder="Ask about HarbourCare — e.g. 'What services do you provide?'" aria-label="Message input"></textarea>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="send" class="send-btn">Send</button>
+        <div class="small" style="text-align:center;color:var(--muted)">Shift+Enter = newline</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/*
+  Replace the webhook URL below with your n8n webhook endpoint.
+  Expected response shape from n8n: { "answer": "..." }
+*/
+const WEBHOOK_URL = "https://n8n.agentx360.in/webhook-test/chat";
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const clearBtn = document.getElementById('clearBtn');
+const copyAllBtn = document.getElementById('copyAll');
+
+const SUGGEST_BTN_SELECTOR = '.quick button';
+const STORAGE_KEY = 'harbourcare_chat_v1';
+const MAX_MEMORY = 10; // keep last 10 messages
+
+// Helper: format time
+function ts(){ const d=new Date(); return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+// Load memory
+let memory = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); // array of {role,msg,ts}
+renderMessages();
+
+// Quick-suggest buttons
+document.querySelectorAll(SUGGEST_BTN_SELECTOR).forEach(b=>{
+  b.addEventListener('click',()=> {
+    const q = b.dataset.suggest;
+    inputEl.value = q;
+    sendMessage();
+  });
+});
+
+// Send on click
+sendBtn.addEventListener('click', sendMessage);
+
+// Keyboard handling: Enter send, Shift+Enter newline
+inputEl.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Clear chat
+clearBtn.addEventListener('click', () => {
+  if(confirm('Clear conversation history?')){
+    memory = [];
+    saveMemory();
+    renderMessages();
+  }
+});
+
+// Export (copy all)
+copyAllBtn.addEventListener('click', () => {
+  const text = memory.map(m => `${m.role.toUpperCase()} [${m.t}]: ${m.msg}`).join('\\n\\n');
+  navigator.clipboard.writeText(text).then(()=> alert('Conversation copied to clipboard.'));
+});
+
+// Render messages from memory
+function renderMessages(){
+  messagesEl.innerHTML = '';
+  memory.forEach(m => {
+    const el = createMessageEl(m.role, m.msg, m.t);
+    messagesEl.appendChild(el);
+  });
+  scrollToBottom();
+}
+
+// Create message DOM
+function createMessageEl(role, text, time){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user-msg' : 'bot-msg');
+  div.innerHTML = `<div class="text">${escapeHtml(text)}</div>
+                   <div class="meta">${time || ts()}</div>`;
+  if(role === 'bot'){
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.addEventListener('click', ()=> navigator.clipboard.writeText(text));
+    actions.appendChild(copyBtn);
+
+    const retryBtn = document.createElement('button');
+    retryBtn.textContent = 'Retry';
+    retryBtn.addEventListener('click', ()=> {
+      // send the user text again through webhook
+      handleBotRetry(text);
+    });
+    actions.appendChild(retryBtn);
+    div.appendChild(actions);
+  }
+  return div;
+}
+
+function scrollToBottom(){
+  requestAnimationFrame(()=> messagesEl.scrollTop = messagesEl.scrollHeight);
+}
+
+function saveMemory(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(memory.slice(-MAX_MEMORY)));
+}
+
+// Escape HTML
+function escapeHtml(unsafe){
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/\\n/g, '<br>');
+}
+
+// Add message to UI & memory
+function pushMessage(role, text){
+  const time = ts();
+  const entry = { role, msg: text, t: time };
+  memory.push(entry);
+  saveMemory();
+  const el = createMessageEl(role, text, time);
+  messagesEl.appendChild(el);
+  scrollToBottom();
+}
+
+
+// Show temporary typing indicator element and return a function to remove it
+function showTyping(){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg bot-msg';
+  wrap.innerHTML = '<div class="typing dots"><span></span><span></span><span></span></div><div class="meta small">typing…</div>';
+  messagesEl.appendChild(wrap);
+  scrollToBottom();
+  return () => { wrap.remove(); };
+}
+
+// Main send flow
+async function sendMessage(){
+  const text = inputEl.value.trim();
+  if(!text) return;
+  // push user message
+  pushMessage('user', text);
+  inputEl.value = '';
+  inputEl.focus();
+
+  // show typing
+  const removeTyping = showTyping();
+
+  // Prepare payload
+  const payload = { question: text };
+  // abort controller for timeout
+  const ac = new AbortController();
+  const timeout = setTimeout(()=> ac.abort(), 20000); // 20s timeout
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method:'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+      signal: ac.signal
+    });
+    clearTimeout(timeout);
+    removeTyping();
+
+    if(!res.ok){
+      const body = await res.text().catch(()=> '');
+      const errMsg = `Request failed: ${res.status} ${res.statusText}` + (body? '\\n' + body : '');
+      pushMessage('bot', errMsg);
+      return;
     }
-  </script>
+    const data = await res.json();
+    // Expecting { answer: "..." }
+    const ans = (data && (data.answer || data.text || data.result)) || JSON.stringify(data);
+    pushMessage('bot', ans);
+  } catch (err){
+    clearTimeout(timeout);
+    removeTyping();
+    const message = err.name === 'AbortError' ? 'Request timed out. Try again.' : `Network error: ${err.message}`;
+    pushMessage('bot', message + '\\n(You can press Retry on the bot message)');
+  }
+}
+
+// Retry sends user's last message (or logic can be adjusted)
+function handleBotRetry(previousBotText){
+  // For retry we will send the previous user question that preceded this bot message.
+  // Find the latest user message before a bot message equal to previousBotText.
+  for(let i = memory.length -1; i >=0; i--){
+    if(memory[i].role === 'bot' && memory[i].msg === previousBotText){
+      // find preceding user
+      for(let j = i-1; j >=0; j--){
+        if(memory[j].role === 'user'){
+          inputEl.value = memory[j].msg;
+          sendMessage();
+          return;
+        }
+      }
+    }
+  }
+  alert('Could not find a matching user message to retry.');
+}
+
+// On first load, if empty, show a friendly starter bot message
+if(memory.length === 0){
+  const starter = `Hi — I'm the HarbourCare assistant. Ask me about services, hours, locations, staff, or contact details.`;
+  pushMessage('bot', starter);
+}
+</script>
 </body>
 </html>
