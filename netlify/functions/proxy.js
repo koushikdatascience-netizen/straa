@@ -25,7 +25,7 @@ export async function handler(event) {
   }
 
   try {
-    const response = await fetch("https://n8n.agentx360.in/webhook-test/chat", {
+    const response = await fetch("https://n8n.agentx360.in/webhook/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: event.body, // safe, only POST reaches here
