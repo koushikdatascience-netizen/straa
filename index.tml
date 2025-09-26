@@ -19,7 +19,7 @@
     async function send() {
       let msg = document.getElementById("msg").value;
       document.getElementById("chat").innerHTML += `<div class="msg user">You: ${msg}</div>`;
-      let res = await fetch("https://YOUR_N8N_URL/webhook/chat", {
+      let res = await fetch("https://n8n.agentx360.in/webhook-test/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ question: msg })
