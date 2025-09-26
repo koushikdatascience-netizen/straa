@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HarbourCare Chatbot</title>
+  <style>
+    body { font-family: Arial; max-width: 500px; margin: auto; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+    .msg { margin: 5px 0; }
+    .user { color: blue; }
+    .bot { color: green; }
+  </style>
+</head>
+<body>
+  <h2>HarbourCare Allied Health Chatbot</h2>
+  <div id="chat"></div>
+  <input id="msg" placeholder="Ask about HarbourCare..." />
+  <button onclick="send()">Send</button>
+  <script>
+    async function send() {
+      let msg = document.getElementById("msg").value;
+      document.getElementById("chat").innerHTML += `<div class="msg user">You: ${msg}</div>`;
+      let res = await fetch("https://YOUR_N8N_URL/webhook/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ question: msg })
+      });
+      let data = await res.json();
+      document.getElementById("chat").innerHTML += `<div class="msg bot">Bot: ${data.answer}</div>`;
+      document.getElementById("msg").value = "";
+    }
+  </script>
+</body>
+</html>
