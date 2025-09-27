@@ -89,50 +89,54 @@
   </div>
 
   <script>
-    const WEBHOOK_URL = "/.netlify/functions/proxy"; // Netlify proxy function
+  const WEBHOOK_URL = "/.netlify/functions/proxy"; // Netlify proxy function
 
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
+  async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const message = input.value.trim();
+    if (!message) return;
 
-      // Show user message
-      document.getElementById("chat-box").innerHTML += `
-        <div class="msg user-msg">${message}</div>
-      `;
-      input.value = "";
+    // Show user message
+    document.getElementById("chat-box").innerHTML += `
+      <div class="msg user-msg">${message}</div>
+    `;
+    input.value = "";
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      let reply;
 
       try {
-        const response = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
-        });
-
-        let reply;
-        try {
-          const data = await response.json(); // try JSON
-          reply = data.reply || JSON.stringify(data);
-        } catch (err) {
-          reply = await response.text(); // fallback to text
-        }
-
-        document.getElementById("chat-box").innerHTML += `
-          <div class="msg bot-msg">${reply}</div>
-        `;
-        document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
-
-      } catch (error) {
-        document.getElementById("chat-box").innerHTML += `
-          <div class="msg bot-msg">⚠️ Error: ${error.message}</div>
-        `;
+        // try parsing JSON
+        const data = await response.clone().json();
+        reply = data.reply || JSON.stringify(data);
+      } catch {
+        // fallback to text
+        reply = await response.text();
       }
-    }
 
-    document.getElementById("send-btn").addEventListener("click", sendMessage);
-    document.getElementById("user-input").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
+      document.getElementById("chat-box").innerHTML += `
+        <div class="msg bot-msg">${reply}</div>
+      `;
+      document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+
+    } catch (error) {
+      document.getElementById("chat-box").innerHTML += `
+        <div class="msg bot-msg">⚠️ Error: ${error.message}</div>
+      `;
+    }
+  }
+
+  document.getElementById("send-btn").addEventListener("click", sendMessage);
+  document.getElementById("user-input").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+
   </script>
 </body>
 </html>
