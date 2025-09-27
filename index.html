@@ -127,24 +127,21 @@
         });
 
         let reply;
-        try {
-          const data = await response.clone().json();
-          reply = data.reply || JSON.stringify(data);
-        } catch {
-          reply = await response.text();
-        }
+try {
+  const data = await response.clone().json();
+  
+  if (Array.isArray(data) && data.length > 0) {
+    reply = data[0].output;   // handle array of objects
+  } else if (data.reply) {
+    reply = data.reply;       // handle normal JSON
+  } else {
+    reply = JSON.stringify(data); // fallback
+  }
 
-        document.getElementById("chat-box").innerHTML += `
-          <div class="msg bot-msg">${reply}</div>
-        `;
-        document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+} catch {
+  reply = await response.text();
+}
 
-      } catch (error) {
-        document.getElementById("chat-box").innerHTML += `
-          <div class="msg bot-msg">⚠️ Error: ${error.message}</div>
-        `;
-      }
-    }
 
     document.getElementById("send-btn").addEventListener("click", sendMessage);
     document.getElementById("user-input").addEventListener("keypress", (e) => {
