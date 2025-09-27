@@ -1,158 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Assistant Chat</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HarbourCare Chatbot</title>
   <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-  .chat-container {
-    width: 420px;
-    height: 600px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+    .chat-container {
+      width: 420px;
+      height: 600px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-  .chat-header {
-    background: #0066cc;
-    color: #fff;
-    padding: 16px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-  }
+    .chat-header {
+      background: #0066cc;
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
 
-  #chat-box {
-    flex: 1;
-    padding: 12px;
-    overflow-y: auto;
-    background: #f9f9f9;
-  }
+    #chat-box {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: #f9f9f9;
+    }
 
-  .msg {
-    margin: 8px 0;
-    padding: 10px 14px;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-  }
+    .msg {
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 14px;
+      line-height: 1.4;
+    }
 
-  .user-msg {
-    background: #0066cc;
-    color: #fff;
-    margin-left: auto;
-    border-bottom-right-radius: 2px;
-  }
+    .user-msg {
+      background: #0066cc !important;
+      color: #ffffff !important;
+      margin-left: auto;
+      border-bottom-right-radius: 2px;
+    }
 
-  .bot-msg {
-    background: #e6e6e6;
-    color: #222;
-    margin-right: auto;
-    border-bottom-left-radius: 2px;
-  }
+    .bot-msg {
+      background: #e6e6e6 !important;
+      color: #000000 !important;   /* force black text */
+      margin-right: auto;
+      border-bottom-left-radius: 2px;
+    }
 
-  .chat-input {
-    display: flex;
-    border-top: 1px solid #ddd;
-  }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
 
-  #user-input {
-    flex: 1;
-    border: none;
-    padding: 12px;
-    font-size: 14px;
-    outline: none;
-  }
+    #user-input {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      outline: none;
+    }
 
-  #send-btn {
-    background: #0066cc;
-    color: white;
-    border: none;
-    padding: 0 20px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s ease-in-out;
-  }
+    #send-btn {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s ease-in-out;
+    }
 
-  #send-btn:hover {
-    background: #004d99;
-  }
-</style>
-
+    #send-btn:hover {
+      background: #004d99;
+    }
+  </style>
 </head>
 <body>
   <div class="chat-container">
-    <div class="chat-header">AI Assistant</div>
+    <div class="chat-header">💬 HarbourCare Assistant</div>
     <div id="chat-box"></div>
-    <div class="input-area">
-      <input id="user-input" type="text" placeholder="Type your message..." />
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Type a message..." />
       <button id="send-btn">Send</button>
     </div>
   </div>
 
   <script>
-  const WEBHOOK_URL = "/.netlify/functions/proxy"; // Netlify proxy function
+    const WEBHOOK_URL = "/.netlify/functions/proxy"; // Netlify proxy function
 
-  async function sendMessage() {
-    const input = document.getElementById("user-input");
-    const message = input.value.trim();
-    if (!message) return;
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
 
-    // Show user message
-    document.getElementById("chat-box").innerHTML += `
-      <div class="msg user-msg">${message}</div>
-    `;
-    input.value = "";
-
-    try {
-      const response = await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-
-      let reply;
+      // Show user message
+      document.getElementById("chat-box").innerHTML += `
+        <div class="msg user-msg">${message}</div>
+      `;
+      input.value = "";
 
       try {
-        // try parsing JSON
-        const data = await response.clone().json();
-        reply = data.reply || JSON.stringify(data);
-      } catch {
-        // fallback to text
-        reply = await response.text();
+        const response = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        let reply;
+        try {
+          const data = await response.clone().json();
+          reply = data.reply || JSON.stringify(data);
+        } catch {
+          reply = await response.text();
+        }
+
+        document.getElementById("chat-box").innerHTML += `
+          <div class="msg bot-msg">${reply}</div>
+        `;
+        document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+
+      } catch (error) {
+        document.getElementById("chat-box").innerHTML += `
+          <div class="msg bot-msg">⚠️ Error: ${error.message}</div>
+        `;
       }
-
-      document.getElementById("chat-box").innerHTML += `
-        <div class="msg bot-msg">${reply}</div>
-      `;
-      document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
-
-    } catch (error) {
-      document.getElementById("chat-box").innerHTML += `
-        <div class="msg bot-msg">⚠️ Error: ${error.message}</div>
-      `;
     }
-  }
 
-  document.getElementById("send-btn").addEventListener("click", sendMessage);
-  document.getElementById("user-input").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+    document.getElementById("user-input").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
   </script>
 </body>
 </html>
